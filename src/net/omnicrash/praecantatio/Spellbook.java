@@ -1,4 +1,4 @@
-package me.omnicrash.praecantatio;
+package net.omnicrash.praecantatio;
 
 import java.util.ArrayList;
 import java.util.List;

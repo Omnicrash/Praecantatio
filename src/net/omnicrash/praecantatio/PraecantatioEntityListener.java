@@ -1,16 +1,18 @@
-package me.omnicrash.praecantatio;
+package net.omnicrash.praecantatio;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityListener;
+import org.bukkit.event.Listener;
 
-public class PraecantatioEntityListener extends EntityListener
+public class PraecantatioEntityListener implements Listener
 {
 	private Praecantatio plugin;
 
     public PraecantatioEntityListener(Praecantatio instance)
     {
         plugin = instance;
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+
     }
 
     public void onEntityDamage(EntityDamageEvent event)
@@ -28,4 +30,5 @@ public class PraecantatioEntityListener extends EntityListener
             */
         }
     }
+
 }

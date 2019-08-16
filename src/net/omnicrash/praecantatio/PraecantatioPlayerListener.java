@@ -1,4 +1,4 @@
-package me.omnicrash.praecantatio;
+package net.omnicrash.praecantatio;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -22,34 +22,34 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.entity.Spider;
 import org.bukkit.entity.Wolf;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerListener;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.material.Dye;
 import org.bukkit.util.Vector;
 
-public class PraecantatioPlayerListener extends PlayerListener
+public class PraecantatioPlayerListener implements Listener
 {
     private Praecantatio plugin;
     
     public PraecantatioPlayerListener(Praecantatio instance)
     {
         plugin = instance;
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+
     }
 
+	@EventHandler
     public void onPlayerMove(PlayerMoveEvent event)
     {
     	Player player = event.getPlayer();
     	
         if(plugin.watcher.getTicks(player, "SlowFall") > 0)
         {
-        	//(BUG: CraftBukkit doesn't report the X and Y values of the velocity, so player can only go straigth down when spell is active.) 
+        	//(BUG: CraftBukkit doesn't report the X and Y values of the velocity, so player can only go straight down when spell is active.)
         	//FIXED/WORKED AROUND
         	Vector velocity = event.getTo().toVector().subtract(event.getFrom().toVector());
         	
@@ -88,12 +88,12 @@ public class PraecantatioPlayerListener extends PlayerListener
         */
         
     }
-    
-    @SuppressWarnings("deprecation")
+
+	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event)
     {
     	Player player = event.getPlayer();
-    	ItemStack item = player.getItemInHand();
+    	ItemStack item = player.getInventory().getItemInMainHand();
     	Action action = event.getAction();
     	
     	if (plugin.config.getBoolean("Spellbook.Enabled", true) && item.getType() == Material.BOOK)
@@ -136,23 +136,26 @@ public class PraecantatioPlayerListener extends PlayerListener
     	}
     	
     }
-    
+
+	@EventHandler
     public void onPlayerJoin(PlayerJoinEvent event)
     {
     	Player player = event.getPlayer();
     	plugin.watcher.addPlayer(player);
     	Spellbook spellbook = new Spellbook();
-    	spellbook.StoredSpell = plugin.users.getStringList(player.getName() + ".Spellbook", new ArrayList<String>());
+    	spellbook.StoredSpell = plugin.users.getStringList(player.getName() + ".Spellbook");
     	plugin.spellbookCollection.put(player, spellbook);
     }
-    
+
+	@EventHandler
     public void onPlayerQuit(PlayerQuitEvent event)
     {
     	plugin.watcher.removePlayer(event.getPlayer());
     	plugin.spellbookCollection.remove(event.getPlayer());
     }
-  
-    public void onPlayerChat(PlayerChatEvent event)
+
+	@EventHandler
+    public void onAsyncPlayerChat(AsyncPlayerChatEvent event)
     {
     	Player player = event.getPlayer();
     	if (plugin.watcher.getTicks(player, "Silence") > 0)
@@ -184,7 +187,7 @@ public class PraecantatioPlayerListener extends PlayerListener
         return output.toLowerCase();
     }
     
-    private Boolean CastSpell(String message, Player player)
+    private boolean CastSpell(String message, Player player)
     {
         // Check the strength & filter input
         int strength = 1;
@@ -218,21 +221,21 @@ public class PraecantatioPlayerListener extends PlayerListener
 	        	String announceLocal;
 	        	if (strength == 1)
 	        	{
-	        		announce = "§e" + player.getName() + "§3 raises his hands and mutters '§4" + message + "§3'.";
-	        		announceLocal = "§3You raise your hands and mutter '§4" + message + "§3'.";
+	        		announce = "ï¿½e" + player.getName() + "ï¿½3 raises his hands and mutters 'ï¿½4" + message + "ï¿½3'.";
+	        		announceLocal = "ï¿½3You raise your hands and mutter 'ï¿½4" + message + "ï¿½3'.";
 	        	}
 	            else if (strength == 2)
 	            {
-	            	announce = "§e" + player.getName() + "§3 raises his hands and yells '§4" + message + "§3'.";
-	        		announceLocal = "§3You raise your hands and yell '§4" + message + "§3'.";
+	            	announce = "ï¿½e" + player.getName() + "ï¿½3 raises his hands and yells 'ï¿½4" + message + "ï¿½3'.";
+	        		announceLocal = "ï¿½3You raise your hands and yell 'ï¿½4" + message + "ï¿½3'.";
 	            }
 	            else// if (strength == 3)
 	            {
-	            	announce = "§e" + player.getName() + "§3 raises his hands and forcefully exclaims '§4" + message + "§3'.";
-	        		announceLocal = "§3You raise your hands and forcefully exclaim '§4" + message + "§3'.";
+	            	announce = "ï¿½e" + player.getName() + "ï¿½3 raises his hands and forcefully exclaims 'ï¿½4" + message + "ï¿½3'.";
+	        		announceLocal = "ï¿½3You raise your hands and forcefully exclaim 'ï¿½4" + message + "ï¿½3'.";
 	            }
 	        	
-	        	int announceLevel = plugin.config.getInt("General.SpellAnounceLevel", 1);
+	        	int announceLevel = plugin.config.getInt("General.SpellAnnounceLevel", 1);
 	        	if (announceLevel < 1)
 	        		player.sendMessage(announceLocal);
 	        	else if (announceLevel == 1)
@@ -260,13 +263,13 @@ public class PraecantatioPlayerListener extends PlayerListener
 		        }
 		        else
 		        {
-		        	if (plugin.spells.getBoolean(nodePath + "CastItemOnly", false) && !Util.isPlayerHolding(player, plugin.spells.getInt("General.CastItem", 280)))
+		        	if (plugin.spells.getBoolean(nodePath + "CastItemOnly", false) && !Util.isPlayerHolding(player, Material.getMaterial(plugin.spells.getString("General.CastItem", Material.BOOK.name()))))
 		        	{
 		        		player.sendMessage("You need to hold a book to cast that spell.");
 		        	}
 		        	else
 		        	{
-		        		Boolean canCast = false;
+		        		boolean canCast = false;
 		        		int costMultiplier = plugin.spells.getInt(nodePath + "CostMultiplier", 1);
 		        		if (costMultiplier > 0)
 		        		{
@@ -283,19 +286,19 @@ public class PraecantatioPlayerListener extends PlayerListener
 		        				cost = plugin.config.getInt("Reagents.Level" + Integer.toString(strength), 1 + 2 * (strength - 1)) * costMultiplier;
 		        			}
 		        			
-	        				Boolean isDye = plugin.config.getBoolean("Reagents." + reagentType + "IsDye", false);
-	        				int material = plugin.config.getInt("Reagents." + reagentType, (isDye ? 4 : 331));
-	        				if (!Util.playerSpendReagent(player, isDye, material, cost))
+	        				//boolean isDye = plugin.config.getBoolean("Reagents." + reagentType + "IsDye", false);
+	        				Material material = Material.getMaterial(plugin.config.getString("Reagents." + reagentType, Material.LAPIS_LAZULI.name()));
+	        				if (!Util.playerSpendItem(player, material, cost))
 	    					{
 	        					int lowCost = plugin.config.getInt("Reagents.Level1", 1 * costMultiplier);
-	        					if (strength != 1 && Util.playerSpendReagent(player, isDye, material, lowCost))
+	        					if (strength != 1 && Util.playerSpendItem(player, material, lowCost))
 	        					{
-	        						player.sendMessage("You need " + Integer.toString(cost) + " " + Util.getItemName(material, isDye) + " to cast the spell at full strength.");
+	        						player.sendMessage("You need " + Integer.toString(cost) + " " + Util.getItemName(material) + " to cast the spell at full strength.");
 	        						strength = 1;
 	        						canCast = true;
 	        					}
 	        					else
-	        						player.sendMessage("You need " + Integer.toString(cost) + " " + Util.getItemName(material, isDye) + " to cast that spell.");
+	        						player.sendMessage("You need " + Integer.toString(cost) + " " + Util.getItemName(material) + " to cast that spell.");
 	    					}
 	        				else
 	        					canCast = true;
@@ -393,8 +396,8 @@ public class PraecantatioPlayerListener extends PlayerListener
     
     private void writeSpell(Player player, String spell)
     {
-		Boolean isDye = plugin.config.getBoolean("Spellbook.WriteReagentIsDye", true);
-		int material = plugin.config.getInt("Spellbook.WriteReagent", 4);
+		//boolean isDye = plugin.config.getBoolean("Spellbook.WriteReagentIsDye", true);
+		Material material = Material.getMaterial(plugin.config.getString("Spellbook.WriteReagent", Material.LAPIS_LAZULI.name()));
 		String nodeName = plugin.spellLookup.get(spell);
 		if (nodeName == null)
 		{
@@ -408,9 +411,9 @@ public class PraecantatioPlayerListener extends PlayerListener
 		{
 			player.sendMessage("Cannot inscribe master spells.");
 		}
-		else if (!Util.playerSpendReagent(player, isDye, material, 1))
+		else if (!Util.playerSpendItem(player, material, 1))
 		{
-			player.sendMessage("You need 1 " + Util.getItemName(material, isDye) + " to inscribe a spell.");
+			player.sendMessage("You need 1 " + material.name() + " to inscribe a spell.");
 		}		
     	else
     	{
@@ -424,7 +427,7 @@ public class PraecantatioPlayerListener extends PlayerListener
     			player.getWorld().dropItem(player.getLocation(), new ItemStack(Material.PAPER, 1));
     			
     			spellbook.StoredSpell.remove(spell);
-    			plugin.users.setProperty(player.getName() + ".Spellbook", spellbook.StoredSpell);
+    			plugin.users.set(player.getName() + ".Spellbook", spellbook.StoredSpell);
     			
     			if (spellbook.CurrentSpell >= spellbook.StoredSpell.size())
     				spellbook.CurrentSpell = 0;
@@ -432,7 +435,7 @@ public class PraecantatioPlayerListener extends PlayerListener
     		else
     		{
     			spellbook.StoredSpell.add(spell);
-    			plugin.users.setProperty(player.getName() + ".Spellbook", spellbook.StoredSpell);
+    			plugin.users.set(player.getName() + ".Spellbook", spellbook.StoredSpell);
     			//item.setDurability((short)6);
     			player.sendMessage("You inscribe the spell '" + spell + "' in your spellbook.");
     		}
@@ -497,10 +500,10 @@ public class PraecantatioPlayerListener extends PlayerListener
 	                    {
 	                        Block block = world.getBlockAt(x, y, z);
 	                        Material type = block.getType();
-	                        if (type != Material.WATER && type != Material.STATIONARY_WATER
-	                    		&& type != Material.LAVA && type != Material.STATIONARY_LAVA
+	                        if (type != Material.WATER/* && type != Material.STATIONARY_WATER*/
+	                    		&& type != Material.LAVA/* && type != Material.STATIONARY_LAVA*/
 	                    		&& type != Material.BEDROCK && type != Material.CHEST && type != Material.OBSIDIAN
-	                    		&& type != Material.PORTAL && type != Material.ICE && type != Material.FURNACE)
+	                    		&& type != Material.NETHER_PORTAL && type != Material.END_PORTAL && type != Material.ICE && type != Material.FURNACE)
 	                		{
 	                        	plugin.watcher.addBlock(block, 5000L + 1000L * i);
 	                        	block.setType(Material.AIR);
@@ -677,26 +680,26 @@ public class PraecantatioPlayerListener extends PlayerListener
     	PlayerInventory inventory = player.getInventory();
     	
     	// Gather info about reagents
-    	Boolean regularIsDye = plugin.config.getBoolean("Reagents.RegularIsDye", false);
-    	int regular = plugin.config.getInt("Reagents.Regular", 331);
-    	Boolean masterIsDye = plugin.config.getBoolean("Reagents.MasterIsDye", true);
-    	int master = plugin.config.getInt("Reagents.Master", 4);
+    	//boolean regularIsDye = plugin.config.getBoolean("Reagents.RegularIsDye", false);
+    	Material regular = Material.getMaterial(plugin.config.getString("Reagents.Regular", Material.REDSTONE.name()));
+    	//boolean masterIsDye = plugin.config.getBoolean("Reagents.MasterIsDye", true);
+		Material master = Material.getMaterial(plugin.config.getString("Reagents.Master", Material.LAPIS_LAZULI.name()));
     	
     	// Check if what the player is holding is a reagent
     	PlayerHoldingType holding = PlayerHoldingType.Invalid;
-    	if (item.getType() == Material.INK_SACK)
+    	if (item.getType() == Material.INK_SAC)
     	{
     		if (regularIsDye && item.getDurability() == regular)
     			holding = PlayerHoldingType.Regular;
     		else if (masterIsDye && item.getDurability() == master)
     			holding = PlayerHoldingType.Master;
     	}
-		else if (item.getTypeId() == regular)
+		else if (item.getType().getId() == regular)
 			holding = PlayerHoldingType.Regular;
-		else if (item.getTypeId() == master)
+		else if (item.getType().getId() == master)
 			holding = PlayerHoldingType.Master;
     	
-    	int cost = plugin.config.getInt("Reagents.TransmuteCost", 15); 
+    	int cost = plugin.config.getInt("Reagents.TransmuteCost", 15);
     	
     	if (holding == PlayerHoldingType.Regular)
     	{
@@ -724,7 +727,7 @@ public class PraecantatioPlayerListener extends PlayerListener
     		}
     		else
     		{
-    			ItemStack reagent = new ItemStack(master, 1);
+    			ItemStack reagent = new ItemStack(Material.master, 1);
     			inventory.addItem(reagent);
     		}
     	}
@@ -922,7 +925,7 @@ public class PraecantatioPlayerListener extends PlayerListener
                 
                 CreatureType creature;
                 double chance = Math.random();
-                Boolean passive = false;
+                boolean passive = false;
                 if (chance < 0.01d) // 1%
                 {
                 	// You fucked up now..
@@ -1066,7 +1069,7 @@ public class PraecantatioPlayerListener extends PlayerListener
     			for (int z = tz - radius; z <= tz + radius; z++)
     			{
     				Block current = world.getBlockAt(x, y, z);
-    				if (current.getType() == Material.REDSTONE_TORCH_ON)
+    				if (current.getType() == Material.LEGACY_REDSTONE_TORCH_ON)
     				{
     					plugin.watcher.addBlock(current, 5000L);
     					current.setType(Material.AIR);
@@ -1401,7 +1404,7 @@ public class PraecantatioPlayerListener extends PlayerListener
         
     }
     
-    private Boolean IsFull(int x, int y, int z, double offset, double radiusSq)
+    private boolean IsFull(int x, int y, int z, double offset, double radiusSq)
     {
 		x -= offset;
 		y -= offset;

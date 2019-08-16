@@ -1,16 +1,18 @@
-package me.omnicrash.praecantatio;
+package net.omnicrash.praecantatio;
 
 import org.bukkit.block.Block;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockListener;
+import org.bukkit.event.Listener;
 
-public class PraecantatioBlockListener extends BlockListener
+public class PraecantatioBlockListener implements Listener
 {
 	private Praecantatio plugin;
 	
 	public PraecantatioBlockListener(Praecantatio instance)
 	{
 		plugin = instance;
+		plugin.getServer().getPluginManager().registerEvents(this, plugin);
+
 	}
 	
 	public void onBlockBreak(BlockBreakEvent event)

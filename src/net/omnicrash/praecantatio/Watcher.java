@@ -1,4 +1,4 @@
-package me.omnicrash.praecantatio;
+package net.omnicrash.praecantatio;
 
 import java.util.Date;
 import java.util.Iterator;
@@ -68,11 +68,11 @@ public class Watcher
 		magicBlocks.put(block, blockInfo);
     }
     
-    public Boolean removeBlock(Block block)
+    public boolean removeBlock(Block block)
     {
     	return removeBlock(block, true);
     }
-    private Boolean removeBlock(Block block, Boolean delete)
+    private boolean removeBlock(Block block, Boolean delete)
     {
     	if (magicBlocks.containsKey(block))
         {
@@ -199,7 +199,7 @@ public class Watcher
         final Iterator<Entry<Player, HashMap<String, Long>>> cdIter = cooldownCollection.entrySet().iterator();
         while (cdIter.hasNext())
         {
-        	Boolean remove = false;
+        	boolean remove = false;
         	
         	// Cooldowns
         	Entry<Player, HashMap<String, Long>> cdEntry = cdIter.next();
@@ -246,7 +246,7 @@ public class Watcher
         		{
             		info.duration -= step * info.frequency;
             		
-            		Boolean finished = false;
+            		boolean finished = false;
             		if (spell.equals("Heal"))
             			finished = heal(player, info.origin);
             		else if (spell.equals("WaterWalking"))
@@ -283,7 +283,7 @@ public class Watcher
         
     }
     
-    private Boolean heal(Player player, Location origin)
+    private boolean heal(Player player, Location origin)
     {
     	Location location = player.getLocation();
         if ((location.getBlockX() != origin.getBlockX())

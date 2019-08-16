@@ -1,0 +1,16 @@
+General.SpellAnnounceLevel: 1
+General.SpellRange: 50
+General.SuperCommand: magna
+General.CastItem: 280
+
+Reagents.Regular: REDSTONE
+Reagents.Master: LAPIS_LAZULI
+Reagents.TransmuteCost: 16
+Reagents.Level1: 1
+Reagents.Level2: 3
+Reagents.Level3: 5
+
+Spellbook.Enabled: true
+Spellbook.InscriptionCommand: scripto
+Spellbook.WriteReagent: INK_SAC
+Spellbook.Cooldown: 5
