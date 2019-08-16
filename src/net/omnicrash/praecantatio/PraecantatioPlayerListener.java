@@ -5,23 +5,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
-import org.bukkit.entity.CreatureType;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.Fireball;
-import org.bukkit.entity.Giant;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.PigZombie;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Slime;
-import org.bukkit.entity.Spider;
-import org.bukkit.entity.Wolf;
+//import org.bukkit.entity.CreatureType;
+import org.bukkit.block.data.Directional;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
@@ -108,7 +98,7 @@ public class PraecantatioPlayerListener implements Listener
     			Long cd = plugin.watcher.getCooldown(player, "Spellbook");
     			if (cd > 0)
     			{
-    				player.sendMessage("Your spellbook needs to cool down for " + Long.toString(cd / 1000L) + " more seconds");
+    				player.sendMessage("Your spellbook needs to cool down for " + cd / 1000L + " more seconds");
     				player.sendMessage("before it can be used again.");
     			}
     			else
@@ -157,6 +147,9 @@ public class PraecantatioPlayerListener implements Listener
 	@EventHandler
     public void onAsyncPlayerChat(AsyncPlayerChatEvent event)
     {
+    	//DEBUG
+    	plugin.log.info("[Praecantatio] DEBUG: Chat triggered");
+
     	Player player = event.getPlayer();
     	if (plugin.watcher.getTicks(player, "Silence") > 0)
     	{
@@ -197,7 +190,7 @@ public class PraecantatioPlayerListener implements Listener
         	strength = 3;
         	message = message.substring(6);
         }
-        else if (message.toUpperCase() == message || message.charAt(message.length()-1) == '!')
+        else if (message.toUpperCase() == message || message.charAt(message.length() - 1) == '!')
         {
             strength = 2;
         }
@@ -208,187 +201,194 @@ public class PraecantatioPlayerListener implements Listener
         
         // Process spell
         String nodeName = plugin.spellLookup.get(message);
+
+        //DEBUG
+		plugin.log.info("[Praecantatio] Node: " +nodeName);
+
         if (nodeName != null)
         {
-			if (plugin.usePermissions && !plugin.permissions.has(player, "praecantatio.spells." + nodeName.toLowerCase()))
+        	//TODO: Permissions
+//			if (plugin.usePermissions && !plugin.permissions.has(player, "praecantatio.spells." + nodeName.toLowerCase()))
+//			{
+//				player.sendMessage("You can't cast that spell.");
+//			}
+//			else
+//			{
+			// Announce the spell
+			String announce;
+			String announceLocal;
+			switch (strength) {
+				case 1:
+					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises his hands and mutters '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					announceLocal = ChatColor.DARK_AQUA + "You raise your hands and mutter '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					break;
+
+				case 2:
+					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises his hands and yells '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					announceLocal = ChatColor.DARK_AQUA + "You raise your hands and yell '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					break;
+
+				case 3:
+				default:
+					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises his hands and forcefully exclaims '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					announceLocal = ChatColor.DARK_AQUA + "You raise your hands and forcefully exclaim '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					break;
+			}
+			int announceLevel = plugin.config.getInt("General.SpellAnnounceLevel", 1);
+			if (announceLevel < 1)
+				player.sendMessage(announceLocal);
+			else if (announceLevel == 1)
 			{
-				player.sendMessage("You can't cast that spell.");
+				double size = 10.0d + 15.0f * (strength - 1);
+				List<Entity> entities = player.getNearbyEntities(size, size, size);
+				for (Entity entity : entities)
+				{
+					if (entity instanceof Player)
+						entity.sendMessage(announce);
+				}
+				player.sendMessage(announceLocal);
+
+			}
+			else
+				player.getServer().broadcastMessage(announce);
+
+
+			String nodePath = "Spells." + nodeName + ".";
+			int cooldown = plugin.spells.getInt(nodePath + "Cooldown", 0);
+			long currentCooldown = plugin.watcher.getCooldown(player, nodeName);
+			if (cooldown > 0 && currentCooldown > 0)
+			{
+				player.sendMessage(message + " is on cooldown for " + currentCooldown / 1000L + " more seconds.");
 			}
 			else
 			{
-	        	// Announce the spell
-	        	String announce;
-	        	String announceLocal;
-	        	if (strength == 1)
-	        	{
-	        		announce = "�e" + player.getName() + "�3 raises his hands and mutters '�4" + message + "�3'.";
-	        		announceLocal = "�3You raise your hands and mutter '�4" + message + "�3'.";
-	        	}
-	            else if (strength == 2)
-	            {
-	            	announce = "�e" + player.getName() + "�3 raises his hands and yells '�4" + message + "�3'.";
-	        		announceLocal = "�3You raise your hands and yell '�4" + message + "�3'.";
-	            }
-	            else// if (strength == 3)
-	            {
-	            	announce = "�e" + player.getName() + "�3 raises his hands and forcefully exclaims '�4" + message + "�3'.";
-	        		announceLocal = "�3You raise your hands and forcefully exclaim '�4" + message + "�3'.";
-	            }
-	        	
-	        	int announceLevel = plugin.config.getInt("General.SpellAnnounceLevel", 1);
-	        	if (announceLevel < 1)
-	        		player.sendMessage(announceLocal);
-	        	else if (announceLevel == 1)
-	    		{
-	        		double size = 10.0d + 15.0f * (strength - 1);
-	        		List<Entity> entities = player.getNearbyEntities(size, size, size);
-	        		for (Entity entity : entities)
-	        		{
-	        			if (entity instanceof Player)
-	        				((Player)entity).sendMessage(announce);
-	        		}
-	        		player.sendMessage(announceLocal);
-	    		
-	    		}
-	        	else
-	        		player.getServer().broadcastMessage(announce);
-	        	
-	        	
-	        	String nodePath = "Spells." + nodeName + ".";
-		        int cooldown = plugin.spells.getInt(nodePath + "Cooldown", 0);
-		        long currentCooldown = plugin.watcher.getCooldown(player, nodeName);
-		        if (cooldown > 0 && currentCooldown > 0)
-		        {
-		        	player.sendMessage(message + " is on cooldown for " + Long.toString(currentCooldown / 1000L) + " more seconds."); 
-		        }
-		        else
-		        {
-		        	if (plugin.spells.getBoolean(nodePath + "CastItemOnly", false) && !Util.isPlayerHolding(player, Material.getMaterial(plugin.spells.getString("General.CastItem", Material.BOOK.name()))))
-		        	{
-		        		player.sendMessage("You need to hold a book to cast that spell.");
-		        	}
-		        	else
-		        	{
-		        		boolean canCast = false;
-		        		int costMultiplier = plugin.spells.getInt(nodePath + "CostMultiplier", 1);
-		        		if (costMultiplier > 0)
-		        		{
-		        			String reagentType;
-		        			int cost;
-		        			if (plugin.spells.getBoolean(nodePath + "Master", false))
-		        			{
-		        				reagentType = "Master";
-		        				cost = costMultiplier;
-		        			}
-		        			else
-		        			{
-		        				reagentType = "Regular";
-		        				cost = plugin.config.getInt("Reagents.Level" + Integer.toString(strength), 1 + 2 * (strength - 1)) * costMultiplier;
-		        			}
-		        			
-	        				//boolean isDye = plugin.config.getBoolean("Reagents." + reagentType + "IsDye", false);
-	        				Material material = Material.getMaterial(plugin.config.getString("Reagents." + reagentType, Material.LAPIS_LAZULI.name()));
-	        				if (!Util.playerSpendItem(player, material, cost))
-	    					{
-	        					int lowCost = plugin.config.getInt("Reagents.Level1", 1 * costMultiplier);
-	        					if (strength != 1 && Util.playerSpendItem(player, material, lowCost))
-	        					{
-	        						player.sendMessage("You need " + Integer.toString(cost) + " " + Util.getItemName(material) + " to cast the spell at full strength.");
-	        						strength = 1;
-	        						canCast = true;
-	        					}
-	        					else
-	        						player.sendMessage("You need " + Integer.toString(cost) + " " + Util.getItemName(material) + " to cast that spell.");
-	    					}
-	        				else
-	        					canCast = true;
-		        		}
-		        		else
-		        			canCast = true;
-		        		
-		        		if (canCast)
-		        		{
-					        if (nodeName.equals("Wall"))
-					            wall(player, strength);
-					        else if (nodeName.equals("GlassToIce"))
-					        	glassToIce(player, strength);
-					        else if (nodeName.equals("Entomb"))
-					        	entomb(player, strength);
-					        /*
-					        else if (nodeName.equals("Escape"))
-					            escape(player);
-					            */
-					        else if (nodeName.equals("Replenish"))
-					            replenish(player, strength);
-					        else if (nodeName.equals("Bubble"))
-					            bubble(player, strength);
-					        else if (nodeName.equals("Lightning"))
-					            lightning(player, strength);
-					        else if (nodeName.equals("Light"))
-					            light(player, strength);
-					        else if (nodeName.equals("Heal"))
-					        	heal(player, strength);
-					        else if (nodeName.equals("Blink"))
-					        	blink(player);
-					        else if (nodeName.equals("Breathe"))
-					        	breathe(player, strength);
-					        else if (nodeName.equals("Freeze"))
-					            freeze(player, strength);
-					        else if (nodeName.equals("Thaw"))
-					            thaw(player, strength);
-					        else if (nodeName.equals("Extinguish"))
-					            extinguish(player, strength);
-					        else if (nodeName.equals("Rain"))
-					            rain(player);
-					        else if (nodeName.equals("Storm"))
-					            storm(player);
-					        else if (nodeName.equals("Clear"))
-					            clear(player);
-					        else if (nodeName.equals("Mutate"))
-					            mutate(player, strength);
-					        else if (nodeName.equals("Activate"))
-					            activate(player, strength);
-					        else if (nodeName.equals("Fireball"))
-					        	fireball(player, strength);
-					        /*
-					        else if (message.equals("pulsus":
-					            Pulsus(strength, ev);
-					        */
-					        else if (nodeName.equals("SlowFall"))
-					        	slowFall(player, strength);
-					        else if (nodeName.equals("Protect"))
-					            protect(player, strength);
-					        else if (nodeName.equals("WaterWalking"))
-					        	waterWalking(player,strength);
-					        else if (nodeName.equals("Transmute"))
-					        	transmute(player);
-					        else if (nodeName.equals("Launch"))
-					        	launch(player, strength);
-					        else if (nodeName.equals("Break"))
-					        	_break(player, strength);
-					        else if (nodeName.equals("Silence"))
-					        	silence(player, strength);
-					        
-					        if (cooldown > 0)
-					        	plugin.watcher.addCooldown(player, nodeName, cooldown * 1000L);
-		        		}
-		        	}
-		        }
+				if (plugin.spells.getBoolean(nodePath + "CastItemOnly", false) && !Util.isPlayerHolding(player, Material.getMaterial(plugin.spells.getString("General.CastItem", Material.BOOK.name()))))
+				{
+					player.sendMessage("You need to hold a book to cast that spell.");
+				}
+				else
+				{
+					boolean canCast = false;
+					int costMultiplier = plugin.spells.getInt(nodePath + "CostMultiplier", 1);
+					if (costMultiplier > 0)
+					{
+						String reagentType;
+						int cost;
+						if (plugin.spells.getBoolean(nodePath + "Master", false))
+						{
+							reagentType = "Master";
+							cost = costMultiplier;
+						}
+						else
+						{
+							reagentType = "Regular";
+							cost = plugin.config.getInt("Reagents.Level" + strength, 1 + 2 * (strength - 1)) * costMultiplier;
+						}
+
+						//boolean isDye = plugin.config.getBoolean("Reagents." + reagentType + "IsDye", false);
+						Material material = Material.getMaterial(plugin.config.getString("Reagents." + reagentType, Material.LAPIS_LAZULI.name()));
+						if (!Util.playerSpendItem(player, material, cost))
+						{
+							int lowCost = plugin.config.getInt("Reagents.Level1", 1 * costMultiplier);
+							if (strength != 1 && Util.playerSpendItem(player, material, lowCost))
+							{
+								player.sendMessage("You need " + cost + " " + Util.getItemName(material) + " to cast the spell at full strength.");
+								strength = 1;
+								canCast = true;
+							}
+							else
+								player.sendMessage("You need " + cost + " " + Util.getItemName(material) + " to cast that spell.");
+						}
+						else
+							canCast = true;
+					}
+					else
+						canCast = true;
+
+					if (canCast)
+					{
+						if (nodeName.equals("Wall"))
+							wall(player, strength);
+						else if (nodeName.equals("GlassToIce"))
+							glassToIce(player, strength);
+						else if (nodeName.equals("Entomb"))
+							entomb(player, strength);
+						/*
+						else if (nodeName.equals("Escape"))
+							escape(player);
+							*/
+						else if (nodeName.equals("Replenish"))
+							replenish(player, strength);
+						else if (nodeName.equals("Bubble"))
+							bubble(player, strength);
+						else if (nodeName.equals("Lightning"))
+							lightning(player, strength);
+						else if (nodeName.equals("Light"))
+							light(player, strength);
+						else if (nodeName.equals("Heal"))
+							heal(player, strength);
+						else if (nodeName.equals("Blink"))
+							blink(player);
+						else if (nodeName.equals("Breathe"))
+							breathe(player, strength);
+						else if (nodeName.equals("Freeze"))
+							freeze(player, strength);
+						else if (nodeName.equals("Thaw"))
+							thaw(player, strength);
+						else if (nodeName.equals("Extinguish"))
+							extinguish(player, strength);
+						else if (nodeName.equals("Rain"))
+							rain(player);
+						else if (nodeName.equals("Storm"))
+							storm(player);
+						else if (nodeName.equals("Clear"))
+							clear(player);
+						else if (nodeName.equals("Mutate"))
+							mutate(player, strength);
+						else if (nodeName.equals("Activate"))
+							activate(player, strength);
+						else if (nodeName.equals("Fireball"))
+							fireball(player, strength);
+						/*
+						else if (message.equals("pulsus":
+							Pulsus(strength, ev);
+						*/
+						else if (nodeName.equals("SlowFall"))
+							slowFall(player, strength);
+						else if (nodeName.equals("Protect"))
+							protect(player, strength);
+						else if (nodeName.equals("WaterWalking"))
+							waterWalking(player,strength);
+						else if (nodeName.equals("Transmute"))
+							transmute(player);
+						else if (nodeName.equals("Launch"))
+							launch(player, strength);
+						else if (nodeName.equals("Break"))
+							_break(player, strength);
+						else if (nodeName.equals("Silence"))
+							silence(player, strength);
+
+						if (cooldown > 0)
+							plugin.watcher.addCooldown(player, nodeName, cooldown * 1000L);
+					}
+				}
+//		        }
 		        return true;
 			}
         }
         else if (plugin.config.getBoolean("Spellbook.Enabled", true)
         		&& message.length() > writeCmd.length() && message.substring(0, writeCmd.length() + 1).toLowerCase().equals(writeCmd + " "))
         {
-        	if (plugin.usePermissions && !plugin.permissions.has(player, "praecantatio.spellbook"))
-			{
-				player.sendMessage("You can't use a spellbook.");
-			}
-			else
-			{
+        	//TODO: Permissions
+//        	if (plugin.usePermissions && !plugin.permissions.has(player, "praecantatio.spellbook"))
+//			{
+//				player.sendMessage("You can't use a spellbook.");
+//			}
+//			else
+//			{
 				writeSpell(player, message.substring(8));
         		return true;
-			}
+//			}
         }
         return false;
         
@@ -397,7 +397,7 @@ public class PraecantatioPlayerListener implements Listener
     private void writeSpell(Player player, String spell)
     {
 		//boolean isDye = plugin.config.getBoolean("Spellbook.WriteReagentIsDye", true);
-		Material material = Material.getMaterial(plugin.config.getString("Spellbook.WriteReagent", Material.LAPIS_LAZULI.name()));
+		Material material = Material.getMaterial(plugin.config.getString("Spellbook.WriteReagent", Material.INK_SAC.name()));
 		String nodeName = plugin.spellLookup.get(spell);
 		if (nodeName == null)
 		{
@@ -458,14 +458,14 @@ public class PraecantatioPlayerListener implements Listener
     		Long duration = plugin.watcher.getTicks(target, "SilenceImmunity");
         	if (duration > 0)
         	{
-        		player.sendMessage(target.getName() + " is immune for " + Long.toString(duration / 1000L) + " more seconds.");
+        		player.sendMessage(target.getName() + " is immune for " + duration / 1000L + " more seconds.");
         	}
     		else
     		{
 	    		plugin.watcher.addTicker(target, "Silence", time, 4);
 	    		plugin.watcher.addTicker(target, "SilenceImmunity", 60000L, 4);
-	    		target.sendMessage("You have been silenced for " + Long.toString(time / 1000L) + " seconds.");
-	    		player.sendMessage("You silence " + target.getName() + " for " + Long.toString(time / 1000L) + " seconds.");
+	    		target.sendMessage("You have been silenced for " + time / 1000L + " seconds.");
+	    		player.sendMessage("You silence " + target.getName() + " for " + time / 1000L + " seconds.");
 	    		player.getWorld().playEffect(target.getLocation(), Effect.SMOKE, 1);
     		}
     	}
@@ -619,7 +619,7 @@ public class PraecantatioPlayerListener implements Listener
     {
     	long time = strength * 10000L;
     	plugin.watcher.addTicker(player, "SlowFall", time, 4);
-    	player.sendMessage("Your falling speed is decreased for " + Long.toString(time / 1000L) + " seconds.");
+    	player.sendMessage("Your falling speed is decreased for " + time / 1000L + " seconds.");
     }
     
     private void heal(Player player, int strength)
@@ -642,7 +642,7 @@ public class PraecantatioPlayerListener implements Listener
         else
         	time = 30000L;
     	plugin.watcher.addTicker(player, "Breathe", time, 4);
-    	player.sendMessage("You have infinite air for " + Long.toString(time / 1000L) + " seconds.");
+    	player.sendMessage("You have infinite air for " + time / 1000L + " seconds.");
     }
     
     private void blink(Player player)
@@ -664,7 +664,7 @@ public class PraecantatioPlayerListener implements Listener
     {
          Long duration = 1000L + 2000L * strength;
          plugin.watcher.addTicker(player, "Protect", duration, 4);
-         player.sendMessage("You are protected against all damage for " + Long.toString(duration / 1000L) + " seconds.");
+         player.sendMessage("You are protected against all damage for " + duration / 1000L + " seconds.");
     }
     
     enum PlayerHoldingType
@@ -675,9 +675,11 @@ public class PraecantatioPlayerListener implements Listener
 	}
     private void transmute(Player player)
     {
-    	ItemStack item = player.getItemInHand();
-    	int amount = item.getAmount();
+    	//TODO: Rework
+		//TODO: Coal stack <-> Diamond transmutation
     	PlayerInventory inventory = player.getInventory();
+		ItemStack item = inventory.getItemInMainHand();
+		int amount = item.getAmount();
     	
     	// Gather info about reagents
     	//boolean regularIsDye = plugin.config.getBoolean("Reagents.RegularIsDye", false);
@@ -687,74 +689,82 @@ public class PraecantatioPlayerListener implements Listener
     	
     	// Check if what the player is holding is a reagent
     	PlayerHoldingType holding = PlayerHoldingType.Invalid;
-    	if (item.getType() == Material.INK_SAC)
-    	{
-    		if (regularIsDye && item.getDurability() == regular)
-    			holding = PlayerHoldingType.Regular;
-    		else if (masterIsDye && item.getDurability() == master)
-    			holding = PlayerHoldingType.Master;
-    	}
-		else if (item.getType().getId() == regular)
+//    	if (item.getType() == Material.INK_SAC)
+//    	{
+//    		if (regularIsDye && item.getDurability() == regular)
+//    			holding = PlayerHoldingType.Regular;
+//    		else if (masterIsDye && item.getDurability() == master)
+//    			holding = PlayerHoldingType.Master;
+//    	}
+		/*else */
+		if (item.getType() == regular)
 			holding = PlayerHoldingType.Regular;
-		else if (item.getType().getId() == master)
+		else if (item.getType() == master)
 			holding = PlayerHoldingType.Master;
     	
     	int cost = plugin.config.getInt("Reagents.TransmuteCost", 15);
     	
-    	if (holding == PlayerHoldingType.Regular)
-    	{
-    		// Spend regular reagent
-    		if (amount < cost)
-            {
-            	player.sendMessage("Not enough " + Util.getItemName(regular, regularIsDye) + ", you need " + Integer.toString(cost) + ".");
-                return;
-            }
-    		else if (amount == cost)
-            {
-                inventory.clear(inventory.getHeldItemSlot());
-            }
-    		else if (amount > cost)
-            {
-            	item.setAmount(amount - cost);
-            }
-    		
-    		// Add master reagent
-    		if (masterIsDye)
-    		{
-    			Dye reagent = new Dye();
-    			reagent.setData((byte)master);
-    			inventory.addItem(reagent.toItemStack(1));
-    		}
-    		else
-    		{
-    			ItemStack reagent = new ItemStack(Material.master, 1);
-    			inventory.addItem(reagent);
-    		}
+
+		// Spend regular reagent
+		if (amount < cost)
+		{
+			player.sendMessage("Not enough " + Util.getItemName(regular) + ", you need " + cost + ".");
+			return;
+		}
+		else if (amount == cost)
+		{
+			inventory.clear(inventory.getHeldItemSlot());
+		}
+		else if (amount > cost) //TODO: IDE warning in error?
+		{
+			item.setAmount(amount - cost);
+		}
+
+		// Add master reagent
+//    		if (masterIsDye)
+//    		{
+//    			Dye reagent = new Dye();
+//    			reagent.setData((byte)master);
+//    			inventory.addItem(reagent.toItemStack(1));
+//    		}
+//    		else
+//    		{
+
+
+//    		}
+		//TODO: Cleanup
+		if (holding == PlayerHoldingType.Regular)
+		{
+			ItemStack reagent = new ItemStack(master, 1);
+			inventory.addItem(reagent);
     	}
     	else if (holding == PlayerHoldingType.Master)
     	{
-    		// Spend master reagent
-    		if (amount == 1)
-            {
-                inventory.clear(inventory.getHeldItemSlot());
-            }
-    		else if (amount > 1)
-            {
-            	item.setAmount(amount - 1);
-            }
-    		
-    		// Add regular reagents
-    		if (regularIsDye)
-    		{
-    			Dye reagent = new Dye();
-    			reagent.setData((byte)regular);
-    			inventory.addItem(reagent.toItemStack(cost));
-    		}
-    		else
-    		{
-    			ItemStack reagent = new ItemStack(regular, cost);
-    			inventory.addItem(reagent);
-    		}
+//    		// Spend master reagent
+//    		if (amount == 1)
+//            {
+//                inventory.clear(inventory.getHeldItemSlot());
+//            }
+//    		else if (amount > 1)
+//            {
+//            	item.setAmount(amount - 1);
+//            }
+//
+//    		// Add regular reagents
+//    		if (regularIsDye)
+//    		{
+//    			Dye reagent = new Dye();
+//    			reagent.setData((byte)regular);
+//    			inventory.addItem(reagent.toItemStack(cost));
+//    		}
+//    		else
+//    		{
+//    			ItemStack reagent = new ItemStack(regular, cost);
+//    			inventory.addItem(reagent);
+//    		}
+
+			ItemStack reagent = new ItemStack(regular, 1);
+			inventory.addItem(reagent);
     	}
     	else
     	{
@@ -783,7 +793,7 @@ public class PraecantatioPlayerListener implements Listener
             	Long duration = plugin.watcher.getTicks(target, "EntombImmunity");
             	if (duration > 0)
             	{
-            		player.sendMessage(target.getName() + " is immune for " + Long.toString(duration / 1000L) + " more seconds.");
+            		player.sendMessage(target.getName() + " is immune for " + duration / 1000L + " more seconds.");
             	}
             	else
             	{
@@ -847,13 +857,32 @@ public class PraecantatioPlayerListener implements Listener
 		    		    {
 		    		    	plugin.watcher.addBlock(sign[i], time - 2000L);
 			        		
-			        		sign[i].setType(Material.WALL_SIGN);
-			        		sign[i].setData((byte)(2 + i));
+			        		sign[i].setType(Material.DARK_OAK_WALL_SIGN);
+
+							Directional directional = (Directional)sign[i].getBlockData();
+							//TODO: Optimize/move to util class
+							switch (i) {
+								case 0:
+									directional.setFacing(BlockFace.SOUTH);
+									break;
+								case 1:
+									directional.setFacing(BlockFace.WEST);
+									break;
+								case 2:
+									directional.setFacing(BlockFace.NORTH);
+									break;
+								case 3:
+									directional.setFacing(BlockFace.EAST);
+									break;
+							}
+							sign[i].setBlockData(directional);
+			        		//sign[i].setData((byte)(2 + i));
+
 			        		Sign signBlock = (Sign)sign[i].getState();
 			        		signBlock.setLine(0, "Here lies");
 			        		signBlock.setLine(1, target.getName());
 			        		signBlock.setLine(2, "R.I.P");
-			        		SimpleDateFormat date = new SimpleDateFormat("dd/MM/yyyy");
+			        		SimpleDateFormat date = new SimpleDateFormat("yyyy-MM-dd");
 			        		signBlock.setLine(3, date.format(new Date()));
 		    		    }
 	    		    }
@@ -884,16 +913,17 @@ public class PraecantatioPlayerListener implements Listener
     	switch (strength)
     	{
     		case 1:
-    			player.throwEgg();
+    			player.launchProjectile(Egg.class);
     			player.sendMessage("You fumble and throw an egg.");
     			break;
     		case 2:
-    			player.throwSnowball();
+				player.launchProjectile(Snowball.class);
     			player.sendMessage("You strain yourself, but you only manage to throw a snowball.");
     			break;
     		case 3:
     			player.getWorld().spawn(target, Fireball.class);
     			break;
+    			//TODO: Blaze/dragon fireballs?
     	}
     	
     }
@@ -919,24 +949,43 @@ public class PraecantatioPlayerListener implements Listener
                 // Don't morph owned wolves
                 if (entity instanceof Wolf && ((Wolf)entity).isTamed())
                 	return;
+
+                //TODO: Guardian? Elder guardian? Dragon??? Shulkers?
+				//TODO: Evoker, Witch (people trans only?  Illusioner? Iron golem? Pillager? Ravager? Vex? Vindicator?  EntityType.ZOMBIE_VILLAGER?
+				//TODO: Cubs? Puppies?? Kittens??? Babby cows?
+				//TODO: Creature variation?
+
+				//TODO: getAllowAnimals & getAllowMonsters
+
+				EntityType[] creatures = {
+						EntityType.CHICKEN, EntityType.COW, EntityType.SHEEP, EntityType.SQUID, EntityType.WOLF, EntityType.SLIME, EntityType.BAT,
+						EntityType.CAT, EntityType.COD, EntityType.DOLPHIN, EntityType.DONKEY, EntityType.FOX, EntityType.HORSE,  EntityType.PIG,
+					 	EntityType.LLAMA, EntityType.MULE, EntityType.OCELOT, EntityType.PARROT, EntityType.PANDA, EntityType.POLAR_BEAR,
+						EntityType.PUFFERFISH, EntityType.SALMON, EntityType.SNOWMAN, EntityType.TURTLE, EntityType.TROPICAL_FISH, EntityType.TRADER_LLAMA
+
+				};
+				EntityType[] monsters = {
+						EntityType.CREEPER, EntityType.SKELETON, EntityType.SLIME, EntityType.SPIDER, EntityType.PIG_ZOMBIE, EntityType.ZOMBIE, EntityType.WOLF,
+						EntityType.ENDERMAN, EntityType.HUSK, EntityType.MAGMA_CUBE, EntityType.PHANTOM, EntityType.SKELETON_HORSE, EntityType.WITHER_SKELETON,
+						EntityType.SILVERFISH, EntityType.STRAY, EntityType.ENDERMITE, EntityType.ZOMBIE_HORSE
+
+				};
                 
-                CreatureType[] creatures = { CreatureType.CHICKEN, CreatureType.COW, CreatureType.SHEEP, CreatureType.SQUID, CreatureType.WOLF, CreatureType.SLIME };
-                CreatureType[] monsters = { CreatureType.CREEPER, CreatureType.SKELETON, CreatureType.SLIME, CreatureType.SPIDER, CreatureType.PIG_ZOMBIE, CreatureType.ZOMBIE, CreatureType.WOLF }; 
-                
-                CreatureType creature;
+                EntityType creature;
                 double chance = Math.random();
                 boolean passive = false;
                 if (chance < 0.01d) // 1%
                 {
-                	// You fucked up now..
-	                creature = CreatureType.GIANT;
+                	// You done goofed up...
+	                creature = EntityType.GIANT;
 	                player.sendMessage("You completely botch the spell!");
                 }
                 else if (chance < 0.02d) // 1%
                 {
                 	// ...but this might be even worse.
-                	creature = CreatureType.GHAST;
-                	player.sendMessage("You completely botch the spell and summon a creature from the nether!");
+                	creature = EntityType.GHAST;
+					//TODO: EntityType.BLAZE, guardians? Shulkers?
+					player.sendMessage("You completely botch the spell and summon a creature from the nether!");
                 }
                 else if (chance < (0.22d + badLuck) / strength) // 20%
                 {
@@ -953,10 +1002,10 @@ public class PraecantatioPlayerListener implements Listener
                 }
                 
                 // Replace entity
-                int oldHealth = ((LivingEntity)entity).getHealth();
+                double oldHealth = ((LivingEntity)entity).getHealth();
                 entity.remove();
                 world.playEffect(eloc, Effect.SMOKE, 1);
-                LivingEntity spawned = world.spawnCreature(eloc, creature);
+                LivingEntity spawned = (LivingEntity)world.spawnEntity(eloc, creature);
                 spawned.setHealth(oldHealth);
                 
                 // Bad wolves
@@ -1169,10 +1218,11 @@ public class PraecantatioPlayerListener implements Listener
                     {
                         Block targetblock = player.getWorld().getBlockAt(x, y, z);
                         Material type = targetblock.getType();
-                        if ((type == Material.AIR) || (type == Material.WATER) || (type == Material.STATIONARY_WATER))
+                        if ((type == Material.AIR) || (type == Material.WATER))
                         {
+                        	//TODO: Alternative instead of setting to dirt
                             targetblock.setType(Material.DIRT);
-                            targetblock.setType(Material.STATIONARY_WATER);
+                            targetblock.setType(Material.WATER);
                         }
                     }
                 }
@@ -1213,7 +1263,7 @@ public class PraecantatioPlayerListener implements Listener
                         {
                         	// Fix for permanent water
                         	if (!plugin.watcher.removeBlock(block))
-                        		block.setType(Material.STATIONARY_WATER);
+                        		block.setType(Material.WATER);
                         }
                         else if (type == Material.SNOW)
                             block.setType(Material.AIR);
@@ -1256,12 +1306,12 @@ public class PraecantatioPlayerListener implements Listener
                         Material type = block.getType();
                         byte data = block.getData();
                         Material bottomtype = bottomblock.getType();
-                        if ((type == Material.WATER || type == Material.STATIONARY_WATER)
+                        if ((type == Material.WATER)
                         	&& (data & 0x7) == 0x0 && (data & 0x8) != 0x8)
                           block.setType(Material.ICE);
                         else if ((type == Material.AIR) && (bottomtype != Material.AIR) && (bottomtype != Material.SNOW)) //TODO: Check for plants?
                           block.setType(Material.SNOW);
-                        else if (type == Material.STATIONARY_LAVA || type == Material.LAVA)
+                        else if (type == Material.LAVA)
                 		{
                         	// If it's not falling, stationary
                         	if ((data & 0x7) == 0x0 && (data & 0x8) != 0x8)
@@ -1325,10 +1375,10 @@ public class PraecantatioPlayerListener implements Listener
                 location.setY(y);
                 Block block = location.getBlock();
                 Material type = block.getType();
-                if (type == Material.AIR || type == Material.SNOW || type == Material.STATIONARY_WATER || type == Material.WATER)
+                if (type == Material.AIR || type == Material.SNOW || type == Material.WATER)
                 {
                 	plugin.watcher.addBlock(block, 15000L - (y - yorg + 1) * 500L);
-                    block.setType(Material.WEB);
+                    block.setType(Material.COBWEB);
             	}
             }
         }
@@ -1346,7 +1396,7 @@ public class PraecantatioPlayerListener implements Listener
     	int radius = 4; 
     	int radiusSq = radius * radius;
     	
-        float size = (float)(2.0f * Math.ceil((double)radius)) + 1.0f;
+        float size = (float)(2.0f * Math.ceil(radius)) + 1.0f;
         int halfSize = (int)size / 2;
         double offset = Math.floor(size / 2.0f);
         
@@ -1383,7 +1433,7 @@ public class PraecantatioPlayerListener implements Listener
 						  && IsFull(x, y + 1, z, offset, radiusSq) && IsFull(x, y, z - 1, offset, radiusSq) && IsFull(x, y, z + 1, offset, radiusSq))
         				{
         					// When underwater, make a temporary bubble
-        					if (type == Material.STATIONARY_WATER || type == Material.WATER)
+        					if (type == Material.WATER || type == Material.LAVA)
         					{
         						plugin.watcher.addBlock(block, 10000L * strength - (y + 1) * 500L);
 	                            block.setType(Material.AIR);
@@ -1391,7 +1441,7 @@ public class PraecantatioPlayerListener implements Listener
         				}
         				else
         				{
-	                        if (type == Material.AIR || type == Material.SNOW || type == Material.STATIONARY_WATER || type == Material.WATER)
+	                        if (type == Material.AIR || type == Material.SNOW || type == Material.WATER)
 	                        {
 	                        	plugin.watcher.addBlock(block, 10000L * strength - (y + 1) * 500L);
 	                            block.setType(Material.ICE);
@@ -1414,5 +1464,11 @@ public class PraecantatioPlayerListener implements Listener
 		z *= z;
 		return x + y + z < radiusSq;
 	}
-    
+
+	//TODO: Anvil spell
+
+	//TODO: Poison spell
+
+	//TODO: Bouncy floor spell?
+
 }

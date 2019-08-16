@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="53386dbd-f895-4eb7-a450-bf7dfe99ef95" name="Default Changelist" comment="" />
+    <list default="true" id="53386dbd-f895-4eb7-a450-bf7dfe99ef95" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/artifacts/praecantatio_jar.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.yml" beforeDir="false" afterPath="$PROJECT_DIR$/config.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/plugin.yml" beforeDir="false" afterPath="$PROJECT_DIR$/plugin.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/spells.yml" beforeDir="false" afterPath="$PROJECT_DIR$/spells.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/Praecantatio.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/Praecantatio.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/PraecantatioBlockListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/PraecantatioBlockListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/PraecantatioEntityListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/PraecantatioEntityListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/PraecantatioPlayerListener.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/PraecantatioPlayerListener.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/Util.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/Util.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/Watcher.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/net/omnicrash/praecantatio/Watcher.java" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,9 +31,9 @@
     <property name="Repository.Attach.JavaDocs" value="false" />
     <property name="Repository.Attach.Sources" value="false" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="project.structure.last.edited" value="Libraries" />
-    <property name="project.structure.proportion" value="0.0" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/spells.yml" />
+    <property name="project.structure.last.edited" value="Artifacts" />
+    <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>

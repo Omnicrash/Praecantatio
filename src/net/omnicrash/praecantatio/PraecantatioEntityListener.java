@@ -1,6 +1,7 @@
 package net.omnicrash.praecantatio;
 
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.Listener;
 
@@ -15,6 +16,7 @@ public class PraecantatioEntityListener implements Listener
 
     }
 
+    @EventHandler
     public void onEntityDamage(EntityDamageEvent event)
     {
         if (event.getEntity() instanceof Player)

@@ -1,16 +1,21 @@
-General.SpellAnnounceLevel: 1
-General.SpellRange: 50
-General.SuperCommand: magna
-General.CastItem: 280
-
-Reagents.Regular: REDSTONE
-Reagents.Master: LAPIS_LAZULI
-Reagents.TransmuteCost: 16
-Reagents.Level1: 1
-Reagents.Level2: 3
-Reagents.Level3: 5
-
-Spellbook.Enabled: true
-Spellbook.InscriptionCommand: scripto
-Spellbook.WriteReagent: INK_SAC
-Spellbook.Cooldown: 5
+#TODO: Case insensitive
+#TODO: Config classes
+General:
+  PermissionsEnabled: false
+  SpellAnnounceLevel: 1
+  SpellRange: 50
+  SuperCommand: magna
+  #TODO: Not used at the moment
+  CastItem: STICK
+Reagents:
+  Regular: REDSTONE
+  Master: LAPIS_LAZULI
+  TransmuteCost: 16
+  Level1: 1
+  Level2: 3
+  Level3: 5
+Spellbook:
+  Enabled: true
+  InscriptionCommand: scripto
+  WriteReagent: INK_SAC
+  Cooldown: 5

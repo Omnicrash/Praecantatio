@@ -4,20 +4,15 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
-import org.bukkit.Material;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.permissions.PermissionAttachment;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.configuration.Configuration;
-import org.bukkit.configuration.ConfigurationSection;
-
-//import com.nijiko.permissions.PermissionHandler;
-//import com.nijikokun.bukkit.Permissions.Permissions;
-import org.bukkit.plugin.Plugin;
 
 public class Praecantatio extends JavaPlugin
 {
@@ -34,11 +29,11 @@ public class Praecantatio extends JavaPlugin
     public final Hashtable<Player, Spellbook> spellbookCollection = new Hashtable<Player, Spellbook>();
     public final Hashtable<String, String> spellLookup = new Hashtable<String, String>();
     
-    private final PraecantatioPlayerListener _playerListener;
-    private final PraecantatioBlockListener _blockListener;
-    private final PraecantatioEntityListener _entityListener;
+    private PraecantatioPlayerListener _playerListener;
+    private PraecantatioBlockListener _blockListener;
+    private PraecantatioEntityListener _entityListener;
     
-    public PermissionHandler permissions;
+//    public PermissionAttachment permissions;
     public boolean usePermissions = false;
     
     /*
@@ -59,15 +54,16 @@ public class Praecantatio extends JavaPlugin
 
     public Praecantatio()
 	{
-		_playerListener = new PraecantatioPlayerListener(this);
-		_blockListener = new PraecantatioBlockListener(this);
-		_entityListener = new PraecantatioEntityListener(this);
 
 	}
 
     @Override
     public void onEnable()
     {
+		_playerListener = new PraecantatioPlayerListener(this);
+		_blockListener = new PraecantatioBlockListener(this);
+		_entityListener = new PraecantatioEntityListener(this);
+
     	// Read or create config file
     	parseConfigs();
     	
@@ -85,7 +81,9 @@ public class Praecantatio extends JavaPlugin
         //watcher.start();
         getServer().getScheduler().scheduleSyncRepeatingTask(this, watcher, 20, 5);
 
-        setupPermissions();
+//        setupPermissions();
+
+		usePermissions = config.getBoolean("General.PermissionsEnabled");
         
         log.info("[Praecantatio] v" + getDescription().getVersion() + " active.");
     }
@@ -100,23 +98,24 @@ public class Praecantatio extends JavaPlugin
         log.info("[Praecantatio] v" + getDescription().getVersion() + " disabled.");
     }
     
-    private void setupPermissions()
-    {
-        if (permissions != null)
-            return;
-        
-        Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
-        
-        if (permissionsPlugin == null)
-        {
-            log.info("[Praecantatio] Permission system not detected, defaulting to OP");
-            return;
-        }
-        
-        permissions = ((Permissions) permissionsPlugin).getHandler();
-        usePermissions = true;
-        log.info("[Praecantatio] Using " + ((Permissions)permissionsPlugin).getDescription().getFullName());
-    }
+//    private void setupPermissions()
+//    {
+////        if (permissions != null)
+////            return;
+//
+//        //Plugin permissionsPlugin = this.getServer().getPluginManager().getPlugin("Permissions");
+//
+////        if (permissionsPlugin == null)
+////        {
+////            log.info("[Praecantatio] Permission system not detected, defaulting to OP");
+////            return;
+////        }
+//
+////        permissions = ((Permissions) permissionsPlugin).getHandler();
+//        usePermissions = true;
+////        log.info("[Praecantatio] Using " + ((Permissions)permissionsPlugin).getDescription().getFullName());
+//		log.info("[Praecantatio] Permissions enabled");
+//    }
     
     private void parseConfigs()
     {
@@ -140,9 +139,10 @@ public class Praecantatio extends JavaPlugin
 			log.info("[Praecantatio] Error creating config file: " + e.getMessage());
 		}
 
-		this.getConfig().options().copyDefaults(true);
-
 		config = this.getConfig();
+
+		config.options().copyDefaults(true);
+		this.saveConfig();
 
 	}
 
@@ -163,11 +163,21 @@ public class Praecantatio extends JavaPlugin
 
 		spells = YamlConfiguration.loadConfiguration(spellFile);
 
+		spells.options().copyDefaults(true);
+		try {
+			spells.save(spellFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.info("[Praecantatio] Error saving spell file defaults: " + e.getMessage());
+		}
+
 		// Parse spell nodes for easy lookup
-		Map<String, Object> spellNodes = spells.getConfigurationSection("Spells").getValues(false);
-		for (Map.Entry<String, Object> entry : spellNodes.entrySet())
+		Set<String> spellNodes = spells.getConfigurationSection("Spells").getKeys(false);
+		for (String key : spellNodes)
 		{
-			spellLookup.put(entry.toString()/*.getValue().getString("Name")*/, entry.getKey());
+			spellLookup.put(spells.getString("Spells." + key + ".Name"), key);
+			//DEBUG
+			log.info("[Praecantatio] Registered spell: " + spells.getString(key + ".Name") + " for " + key);
 		}
 
 	}
@@ -181,7 +191,8 @@ public class Praecantatio extends JavaPlugin
 			//isNew = spellFile.createNewFile();
 			if (!usersFile.exists()) {
 				//TODO: Data folder?
-				this.saveResource(FILE_USERS, false);
+				usersFile.createNewFile();
+				//this.saveResource(FILE_USERS, false);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -190,6 +201,24 @@ public class Praecantatio extends JavaPlugin
 		}
 
 		users = YamlConfiguration.loadConfiguration(usersFile);
+		try {
+			users.save(usersFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.info("[Praecantatio] Error saving users file defaults: " + e.getMessage());
+		}
+
+	}
+
+	public void saveUsers()
+	{
+		//TODO: Move to custom config class
+		try {
+			users.save(new File(getDataFolder().getPath(), FILE_USERS));
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.info("[Praecantatio] Error saving users file: " + e.getMessage());
+		}
 
 	}
     

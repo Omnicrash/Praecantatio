@@ -1,3 +1,4 @@
 name: Praecantatio
 main: net.omnicrash.praecantatio.Praecantatio
-version: 2.0
+version: 1.9alpha1
+api-version: 1.14

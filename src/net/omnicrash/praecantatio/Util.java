@@ -48,19 +48,19 @@ public class Util
         return false;
     }
     
-    // Gets all slots containing the requested dye in a players inventory
-    public static Map<Integer, ? extends ItemStack> getDye(PlayerInventory inventory, int color)
-	{
-    	Map<Integer, ? extends ItemStack> dyes = inventory.all(Material.INK_SACK);
-    	final Iterator<? extends ItemStack> iter = dyes.values().iterator();
-    	while (iter.hasNext())
-        {
-        	if (iter.next().getDurability() != color)
-    			iter.remove();
-    	}
-    	
-    	return dyes;
-	}
+//    // Gets all slots containing the requested dye in a players inventory
+//    public static Map<Integer, ? extends ItemStack> getDye(PlayerInventory inventory, int color)
+//	{
+//    	Map<Integer, ? extends ItemStack> dyes = inventory.all(Material.INK_SACK);
+//    	final Iterator<? extends ItemStack> iter = dyes.values().iterator();
+//    	while (iter.hasNext())
+//        {
+//        	if (iter.next().getDurability() != color)
+//    			iter.remove();
+//    	}
+//
+//    	return dyes;
+//	}
     
     public static void removeFromSlots(PlayerInventory inventory, Integer[] slots, int amount)
     {

@@ -11,6 +11,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 
 public class Watcher
@@ -28,8 +29,8 @@ public class Watcher
     private class BlockInfo
 	{
 	    public long time;// = new Date().getTime();
-	    public Material original;// = Material.AIR;
-	    public byte data;
+	    public Material material;// = Material.AIR;
+	    public BlockData data;
 	}
     private Map<Block, BlockInfo> magicBlocks = new HashMap<Block, BlockInfo>();
     
@@ -53,17 +54,17 @@ public class Watcher
     public void addBlock(Block block, Long duration)
     {
     	Material type = block.getType();
-    	byte data = block.getData();
+    	BlockData data = block.getBlockData();
     	if (magicBlocks.containsKey(block))
     	{
-    		type = magicBlocks.get(block).original;
+    		type = magicBlocks.get(block).material;
     		data = magicBlocks.get(block).data;
     		magicBlocks.remove(block);
     	}
 		
 		BlockInfo blockInfo = new BlockInfo();
 		blockInfo.time = new Date().getTime() + duration;
-		blockInfo.original = type;
+		blockInfo.material = type;
 		blockInfo.data = data;
 		magicBlocks.put(block, blockInfo);
     }
@@ -76,15 +77,15 @@ public class Watcher
     {
     	if (magicBlocks.containsKey(block))
         {
-    		Material original = magicBlocks.get(block).original;
-    		Byte data = magicBlocks.get(block).data;
+    		Material original = magicBlocks.get(block).material;
+    		BlockData data = magicBlocks.get(block).data;
 			// Dirt block is set first to stop flowing water
     		/*
 			if (original != Material.STATIONARY_WATER && original != Material.WATER)
 				block.setType(Material.DIRT);
 				*/
 			block.setType(original);
-			block.setData(data);
+			block.setBlockData(data);
 			if (delete) magicBlocks.remove(block);
 			block.getWorld().playEffect(block.getLocation(), Effect.SMOKE, 1);
 			return true;
@@ -174,7 +175,7 @@ public class Watcher
         
         // Save user config every 5 minutes
         if (currentTick % 10000 == 0)
-        	plugin.users.save();
+        	plugin.saveUsers();
         
         // Cleanup
         if (currentTick % 2 == 0 && magicBlocks.size() != 0)
@@ -310,7 +311,8 @@ public class Watcher
         
         // Calculate directional vector for player
         
-        
+        //TODO: Higher strength => lava walking
+
         for (int y = 0; y >= -1; y--)
         {
 	        for (int x = -2; x <= 2; x++)
@@ -320,7 +322,7 @@ public class Watcher
 		    		Block block = world.getBlockAt(playerX + x, playerY + y, playerZ + z);
 		    		Material type = block.getType();
 		    		Byte data = block.getData();
-		    		if ((type == Material.STATIONARY_WATER || type == Material.WATER)
+		    		if (type == Material.WATER
 						&& (data & 0x7) == 0x0 && (data & 0x8) != 0x8)
 		    		{
 		    			addBlock(block, 5000L);
