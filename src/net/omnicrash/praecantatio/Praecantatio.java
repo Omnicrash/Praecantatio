@@ -84,8 +84,8 @@ public class Praecantatio extends JavaPlugin
 //        setupPermissions();
 
 		usePermissions = config.getBoolean("General.PermissionsEnabled");
-        
-        log.info("[Praecantatio] v" + getDescription().getVersion() + " active.");
+
+        log.info("[Praecantatio] v" + getDescription().getVersion() + " enabled.");
     }
     
     @Override

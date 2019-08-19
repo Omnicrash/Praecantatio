@@ -294,7 +294,7 @@ public class Watcher
             return true;
         //this.health += 1;
         player.setHealth(player.getHealth() + 1);
-        player.getWorld().playEffect(location, Effect.SMOKE, 1);
+        player.getWorld().playEffect(location, Effect.BREWING_STAND_BREW, 1);
         
         return false;
     }
