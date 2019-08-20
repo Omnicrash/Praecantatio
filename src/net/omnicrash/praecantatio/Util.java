@@ -8,6 +8,7 @@ import java.util.Map;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -204,5 +205,10 @@ public class Util
     	
     	return result;
     }
+
+	public static double getMaxHealth(Player player)
+	{
+		return player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
+	}
     
 }

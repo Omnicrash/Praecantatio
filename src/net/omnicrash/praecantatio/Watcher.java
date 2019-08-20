@@ -289,14 +289,24 @@ public class Watcher
     	Location location = player.getLocation();
         if ((location.getBlockX() != origin.getBlockX())
           || (location.getBlockY() != origin.getBlockY())
-          || (location.getBlockZ() != origin.getBlockZ())
-          || (player.getHealth() >= 20))
-            return true;
-        //this.health += 1;
-        player.setHealth(player.getHealth() + 1);
+          || (location.getBlockZ() != origin.getBlockZ())) {
+			return true;
+		}
+
+        boolean full = false;
+
+		double maxHealth = Util.getMaxHealth(player);
+		double targetHealth = player.getHealth() + 1;
+		if (targetHealth >= maxHealth) {
+			targetHealth = maxHealth;
+			full = true;
+		}
+
+		player.setHealth(targetHealth);
         player.getWorld().playEffect(location, Effect.BREWING_STAND_BREW, 1);
+		player.getWorld().playEffect(location, Effect.VILLAGER_PLANT_GROW, 1);
         
-        return false;
+        return full;
     }
     
     //private final int[] valuesX = {  0, -1,  0,  1, -2, -1,  0,  1,  2, -1,  0,  1,  0 };

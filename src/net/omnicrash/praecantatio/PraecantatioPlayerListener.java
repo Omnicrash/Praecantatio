@@ -469,6 +469,8 @@ public class PraecantatioPlayerListener implements Listener
 	    		player.getWorld().playEffect(target.getLocation(), Effect.SMOKE, 1);
     		}
     	}
+
+    	//TODO: setSilent?
     	
     }
     

@@ -16,6 +16,9 @@ import org.bukkit.entity.Player;
 
 public class Praecantatio extends JavaPlugin
 {
+    private final static int SECOND = 20;
+    private final static int HALF_SECOND = 10;
+
 	private final String FILE_SPELLS = "spells.yml";
 	private final String FILE_USERS = "users.yml";
 
@@ -60,32 +63,21 @@ public class Praecantatio extends JavaPlugin
     @Override
     public void onEnable()
     {
-		_playerListener = new PraecantatioPlayerListener(this);
-		_blockListener = new PraecantatioBlockListener(this);
-		_entityListener = new PraecantatioEntityListener(this);
-
     	// Read or create config file
     	parseConfigs();
-    	
-    	// Hook events
-        //PluginManager pm = getServer().getPluginManager();
-//        pm.registerEvent(new AsyncPlayerChatEvent(), this.playerListener, EventPriority.NORMAL, this);
-//        pm.registerEvent(Event.Type.PLAYER_MOVE, this.playerListener, EventPriority.NORMAL, this);
-//        pm.registerEvent(Event.Type.PLAYER_JOIN, this.playerListener, EventPriority.NORMAL, this);
-//        pm.registerEvent(Event.Type.PLAYER_QUIT, this.playerListener, EventPriority.NORMAL, this);
-//        pm.registerEvent(Event.Type.PLAYER_INTERACT, this.playerListener, EventPriority.NORMAL, this);
-//        pm.registerEvent(Event.Type.BLOCK_BREAK, this.blockListener, EventPriority.NORMAL, this);
-//        pm.registerEvent(Event.Type.ENTITY_DAMAGE, this.entityListener, EventPriority.NORMAL, this);
-        
+
+    	// Create event listeners
+        _playerListener = new PraecantatioPlayerListener(this);
+        _blockListener = new PraecantatioBlockListener(this);
+        _entityListener = new PraecantatioEntityListener(this);
+
         // Start watcher thread
-        //watcher.start();
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, watcher, 20, 5);
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, watcher, 30*SECOND, HALF_SECOND);
 
-//        setupPermissions();
-
+        //setupPermissions();
 		usePermissions = config.getBoolean("General.PermissionsEnabled");
 
-        log.info("[Praecantatio] v" + getDescription().getVersion() + " enabled.");
+        log.info(this.getDescription().getFullName() + " enabled");
     }
     
     @Override
@@ -94,8 +86,8 @@ public class Praecantatio extends JavaPlugin
     	//watcher.stop();
     	watcher.cleanUp();
     	//users.save();
-    	
-        log.info("[Praecantatio] v" + getDescription().getVersion() + " disabled.");
+
+        log.info(this.getDescription().getFullName() + " disabled");
     }
     
 //    private void setupPermissions()
