@@ -1,7 +1,7 @@
 <component name="ArtifactManager">
   <artifact type="jar" build-on-make="true" name="praecantatio:jar">
     <output-path>C:/devices/craftcore/plugins</output-path>
-    <root id="archive" name="praecantatio-1.9alpha2.jar">
+    <root id="archive" name="Praecantatio-1.4.jar">
       <element id="module-output" name="praecantatio" />
     </root>
   </artifact>
