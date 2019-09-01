@@ -16,8 +16,9 @@ import org.bukkit.entity.Player;
 
 public class Praecantatio extends JavaPlugin
 {
-    private final static int SECOND = 20;
-    private final static int HALF_SECOND = 10;
+    private final static int QUARTER_SECOND = 5;
+	private final static int HALF_SECOND = QUARTER_SECOND*2;
+	private final static int SECOND = HALF_SECOND*2;
 
 	private final String FILE_SPELLS = "spells.yml";
 	private final String FILE_USERS = "users.yml";
@@ -72,7 +73,7 @@ public class Praecantatio extends JavaPlugin
         _entityListener = new PraecantatioEntityListener(this);
 
         // Start watcher thread
-        getServer().getScheduler().scheduleSyncRepeatingTask(this, watcher, 30*SECOND, HALF_SECOND);
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, watcher, QUARTER_SECOND, QUARTER_SECOND);
 
         //setupPermissions();
 		usePermissions = config.getBoolean("General.PermissionsEnabled");
@@ -167,9 +168,9 @@ public class Praecantatio extends JavaPlugin
 		Set<String> spellNodes = spells.getConfigurationSection("Spells").getKeys(false);
 		for (String key : spellNodes)
 		{
-			spellLookup.put(spells.getString("Spells." + key + ".Name"), key);
-			//DEBUG
-			log.info("[Praecantatio] Registered spell: " + spells.getString(key + ".Name") + " for " + key);
+			String spellPath = spells.getString("Spells." + key + ".Name");
+			spellLookup.put(spellPath, key);
+			log.info("[Praecantatio] Registered spell: " + spellPath + " as " + key);
 		}
 
 	}

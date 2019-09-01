@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
-import org.bukkit.Effect;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 public class Watcher
   implements Runnable
@@ -164,7 +163,7 @@ public class Watcher
     
     public void run()
     {
-    	// Lots of timing calcultations
+    	// Timing calculations
         long currentTime = new Date().getTime();
         long currentTimeStep = currentTime - lastTime;
         lastTime = currentTime;
@@ -261,7 +260,7 @@ public class Watcher
             			{
             				String spellName = plugin.spells.getString("Spells." + spell + ".Name");
             				if (spellName != null)
-            					player.sendMessage(spellName + " wore off.");
+            					player.sendMessage(spellName + " wears off.");
             			}
             			else if (cd.isEmpty() && ticks.isEmpty())
             				remove = true;
@@ -302,9 +301,13 @@ public class Watcher
 			full = true;
 		}
 
+		//TODO: Replace all heal functions with rounded up?
 		player.setHealth(targetHealth);
-        player.getWorld().playEffect(location, Effect.BREWING_STAND_BREW, 1);
-		player.getWorld().playEffect(location, Effect.VILLAGER_PLANT_GROW, 1);
+
+		World world = player.getWorld();
+        world.spawnParticle(Particle.SPELL, location, 1);
+		world.spawnParticle(Particle.HEART, location, 1, 0, -1, 0);
+		world.playSound(location, Sound.ENTITY_PLAYER_BURP, 10, 1);
         
         return full;
     }
@@ -320,6 +323,8 @@ public class Watcher
         int playerZ = location.getBlockZ();
         
         // Calculate directional vector for player
+
+		//TODO: Wider/velocity based
         
         //TODO: Higher strength => lava walking
 

@@ -13,6 +13,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.*;
 import org.bukkit.event.Listener;
@@ -144,12 +145,9 @@ public class PraecantatioPlayerListener implements Listener
     	plugin.spellbookCollection.remove(event.getPlayer());
     }
 
-	@EventHandler
-    public void onAsyncPlayerChat(AsyncPlayerChatEvent event)
+	@EventHandler(priority = EventPriority.HIGHEST)
+    public void onPlayerChatEvent(PlayerChatEvent event)
     {
-    	//DEBUG
-    	plugin.log.info("[Praecantatio] DEBUG: Chat triggered");
-
     	Player player = event.getPlayer();
     	if (plugin.watcher.getTicks(player, "Silence") > 0)
     	{
@@ -158,6 +156,7 @@ public class PraecantatioPlayerListener implements Listener
     	}
     	else
     	{
+			//TODO: Separate casting/checking, schedule a synchronous event for casting
 	    	String message = event.getMessage().trim();
 	    	if (CastSpell(message, player))
 	    		event.setCancelled(true);
@@ -202,9 +201,6 @@ public class PraecantatioPlayerListener implements Listener
         // Process spell
         String nodeName = plugin.spellLookup.get(message);
 
-        //DEBUG
-		plugin.log.info("[Praecantatio] Node: " +nodeName);
-
         if (nodeName != null)
         {
         	//TODO: Permissions
@@ -219,18 +215,18 @@ public class PraecantatioPlayerListener implements Listener
 			String announceLocal;
 			switch (strength) {
 				case 1:
-					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises his hands and mutters '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises their hands and mutters '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
 					announceLocal = ChatColor.DARK_AQUA + "You raise your hands and mutter '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
 					break;
 
 				case 2:
-					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises his hands and yells '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises their hands and yells '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
 					announceLocal = ChatColor.DARK_AQUA + "You raise your hands and yell '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
 					break;
 
 				case 3:
 				default:
-					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises his hands and forcefully exclaims '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
+					announce = ChatColor.YELLOW + player.getName() + ChatColor.DARK_AQUA + " raises their hands and forcefully exclaims '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
 					announceLocal = ChatColor.DARK_AQUA + "You raise your hands and forcefully exclaim '" + ChatColor.DARK_RED + message + ChatColor.DARK_AQUA + "'.";
 					break;
 			}
@@ -1191,6 +1187,7 @@ public class PraecantatioPlayerListener implements Listener
 
     private void replenish(Player player, int strength)
     {
+        //TODO
     	if (!plugin.usePermissions && !player.isOp())
     		return;
     	
@@ -1352,6 +1349,7 @@ public class PraecantatioPlayerListener implements Listener
     
     private void wall(Player player, int strength)
     {
+    	//TODO: Fix
         int length = 5 + 5 * strength;
 
         Vector vector = player.getEyeLocation().getDirection().normalize();
